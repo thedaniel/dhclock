@@ -1,0 +1,19 @@
+*~
+.#*
+## the next line needs to start with a backslash to avoid looking like
+## a comment
+\#*#
+*.pyc
+*.pyo
+.*.swp
+TAGS
+*.sqlite3
+
+/parts
+/.installed.cfg
+/develop-eggs
+/*.egg-info
+/eggs
+/bin
+/irv/settings.py
+/var
