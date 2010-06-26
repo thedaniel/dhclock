@@ -14,9 +14,10 @@ class TestClockInOut(unittest.TestCase):
     def test_no_file_in(self):
         tempdir = tempfile.mkdtemp()
         now = datetime.datetime(2010, 05, 01)
-        timelog.clock_in(reason='test', log_dir=tempdir, _now=now)
+        ret = timelog.clock_in(reason='test', log_path=os.path.join(tempdir, 'timelog'), _now=now)
+        assert ret == ('i', now)
         assert 'timelog' in os.listdir(tempdir)
-        with open(os.path.join(tempdir, 'timelog'), 'w') as f:
+        with open(os.path.join(tempdir, 'timelog'), 'r') as f:
             lines = f.readlines()
             assert len(lines) == 1
             assert lines[0] == ' '.join(
@@ -24,7 +25,7 @@ class TestClockInOut(unittest.TestCase):
                     'i',
                     now.strftime("%Y/%m/%d"),
                     now.strftime("%H:%M:%S"),
-                    'test',
+                    'test\n',
                     ]
                 )
 
@@ -35,7 +36,7 @@ class TestClockInOut(unittest.TestCase):
             RuntimeError,
             timelog.clock_out,
             reason='test',
-            log_dir=tempdir,
+            log_path=os.path.join(tempdir, 'timelog'),
             _now=now,
             )
         assert str(e) == 'not clocked in'
@@ -46,7 +47,7 @@ class TestClockInOut(unittest.TestCase):
         f = open(os.path.join(tempdir, 'timelog'), 'w')
         f.close()
         now = datetime.datetime(2010, 05, 01)
-        timelog.clock_in(reason='test', log_dir=tempdir, _now=now)
+        timelog.clock_in(reason='test', log_path=os.path.join(tempdir, 'timelog'), _now=now)
         assert 'timelog' in os.listdir(tempdir)
         with open(os.path.join(tempdir, 'timelog')) as f:
             lines = f.readlines()
@@ -56,7 +57,7 @@ class TestClockInOut(unittest.TestCase):
                     'i',
                     now.strftime("%Y/%m/%d"),
                     now.strftime("%H:%M:%S"),
-                    'test',
+                    'test\n',
                     ]
                 )
 
@@ -67,16 +68,16 @@ class TestClockInOut(unittest.TestCase):
         now = datetime.datetime(2010, 03, 17)
         e = util.raises(
             RuntimeError,
-            timelog.clock_out,
+            timelog.clock_in,
             reason='test',
-            log_dir=tempdir,
+            log_path=os.path.join(tempdir, 'timelog'),
             _now=now,
             )
         assert str(e) == "already clocked in"
         assert 'timelog' in os.listdir(tempdir)
         with open(os.path.join(tempdir, 'timelog')) as f:
             lines = f.readlines()
-            assert lines == ['i 2010/03/16 12:20:19 misc']
+            assert lines == ['i 2010/03/16 12:20:19 misc\n']
 
     def test_partial_file(self):
         tempdir = tempfile.mkdtemp()
@@ -84,23 +85,26 @@ class TestClockInOut(unittest.TestCase):
             f.write('i 2010/03/16 12:20:19 misc\n')
             f.write('o 2010/03/16 12:22:19 out\n')
         now = datetime.datetime(2010, 03, 17)
-        with open(os.path.join(tempdir, 'timelog'), 'w') as f:
+        timelog.clock_in(
+            reason='test',
+            log_path=os.path.join(tempdir, 'timelog'),
+            _now=now,
+            )
+        with open(os.path.join(tempdir, 'timelog'), 'r') as f:
             lines = f.readlines()
-            assert len(lines) == 1
-            assert lines ==[
-                [
-                    'i 2010/03/16 12:20:19 misc',
-                    'o 2010/03/16 12:22:19 out',
-                    ],
+            wanted = [
+                'i 2010/03/16 12:20:19 misc\n',
+                'o 2010/03/16 12:22:19 out\n',
                 ' '.join(
                     [
                         'i',
                         now.strftime("%Y/%m/%d"),
                         now.strftime("%H:%M:%S"),
-                        'test',
+                        'test\n',
                         ]
                     ),
                 ]
+            assert lines == wanted
 
 class TestReports(unittest.TestCase):
     def test_summary(self):
