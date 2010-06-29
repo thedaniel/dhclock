@@ -12,7 +12,7 @@ CONFIG_PATH = os.path.expanduser('~/.dhclock')
 def clock():
     parser = OptionParser()
     parser.add_option(
-        '--l',
+        '-l',
         '--log',
         dest='log_path',
         help="location of timelog file",
