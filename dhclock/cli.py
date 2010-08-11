@@ -5,7 +5,6 @@ from ConfigParser import ConfigParser
 
 from dhclock import timelog
 
-# TODO this should have the same default as emacs
 LOG_PATH = os.path.expanduser('~/.timelog')
 CONFIG_PATH = os.path.expanduser('~/.dhclock')
 
@@ -24,14 +23,17 @@ def clock():
         help="path to config file",
         )
     opts, args = parser.parse_args()
-    log_path = opts.log_path # None if unset
+
     config_path = opts.config_path
     if config_path is None:
         config_path = CONFIG_PATH
     if os.path.exists(config_path):
         conf = ConfigParser()
         conf.read([config_path])
-        log_path = conf.get('log_path', None)
+        try:
+            log_path = conf.get('dhclock', 'log_path')
+        except ConfigParser.NoOptionError:
+            log_path = opts.log_path # None if unset
     if log_path is None:
         log_path = LOG_PATH
     if len(args) != 2:
